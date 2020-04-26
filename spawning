@@ -1,0 +1,293 @@
+require('prototype.spawn')();
+
+
+
+module.exports ={
+  run: function(thisSpawn, spawnRoom, roomCreeps){
+
+
+
+
+
+
+var spawnBusy = ( Boolean(thisSpawn.createCreep() == ERR_BUSY))
+thisSpawn.memory.sleepCounter -= 1;
+// console.log(spawnRoom.name + "    " + thisSpawn.memory.sleepCounter);
+
+
+// if( thisSpawn == Game.spawns.Spawn1){
+//   console.log(thisSpawn + " has a counter of " + thisSpawn.memory.sleepCounter);
+// console.log(spawnBusy)
+// }
+
+
+
+
+
+if((thisSpawn.memory.sleepCounter < 1)&&(spawnBusy!= true)) {
+  //  if( thisSpawn == Game.spawns.Spawn1){
+  // console.log('time for ' + thisSpawn + ' to wakey wakey');
+  //
+  //  }
+var spawned;
+
+
+
+  var roomMemory = spawnRoom.memory;
+  var minimumUpgraders = thisSpawn.memory.minimumUpgraders;
+  var harvestersBlock1 = roomCreeps.filter(c => ((c.memory.role === 'harvester')&& (c.memory.sourceBlock == roomMemory.energySource1))).length;
+  var harvestersBlock2 = roomCreeps.filter(c => ((c.memory.role === 'harvester')&& (c.memory.sourceBlock == roomMemory.energySource2))).length;
+  var totalHarvesters = harvestersBlock1 + harvestersBlock2;
+
+  var theMineralSource = Game.getObjectById(roomMemory.mineralSource);
+  var curSpawnEnergy = spawnRoom.energyAvailable;
+
+  if(thisSpawn.memory.minimumSpawnFillers > 0){var stationaryHarvest = true;}else{var stationaryHarvest = false;}
+  if(thisSpawn.memory.minimumStorageFillers > 0){var stationaryUpgrade = true;}else{var stationaryUpgrade = false;}
+
+
+
+
+  if(roomMemory.mainStorage != undefined){
+    var energyStored = Game.getObjectById(roomMemory.mainStorage);
+    energyStored = energyStored.store.energy
+  }else{
+    energyStored = 0;
+  }
+
+
+  if((spawnRoom.find(FIND_CONSTRUCTION_SITES)).length > 0){thisSpawn.memory.isBuilding = true;}else{thisSpawn.memory.isBuilding = false;}
+
+
+
+
+
+
+
+
+                    //SPAWNING
+
+  //HARVESTER
+    if ((totalHarvesters < thisSpawn.memory.minimumHarvesters)&&(totalHarvesters > 0)){
+      if (harvestersBlock1 < 1){
+        if(!(curSpawnEnergy < thisSpawn.memory.HarvesterEnergy)){
+          if (stationaryHarvest == true){
+            spawned = thisSpawn.createStationaryHarvester(thisSpawn.id, thisSpawn.memory.HarvesterEnergy, spawnRoom.name, 'harvester', roomMemory.energySource1, roomMemory.mainStorage,
+             roomMemory.mineralContainer,true, roomMemory.sourceContainer1, true, roomMemory.sourcesClose);
+             return;
+          }else{
+            spawned = thisSpawn.createSimpleWorker(thisSpawn.id, curSpawnEnergy, spawnRoom.name, 'harvester', roomMemory.energySource1, roomMemory.mainStorage,roomMemory.mineralContainer,);
+            return;
+          }
+
+        }
+
+      }else{
+        if(!(curSpawnEnergy < thisSpawn.memory.HarvesterEnergy)) {
+          if(stationaryHarvest == true){
+            spawned = thisSpawn.createStationaryHarvester(thisSpawn.id, thisSpawn.memory.HarvesterEnergy, spawnRoom.name, 'harvester', roomMemory.energySource2, roomMemory.mainStorage,
+             roomMemory.mineralContainer,true, roomMemory.sourceContainer2, true, roomMemory.sourcesClose);
+             return;
+          }
+             else{
+            spawned = thisSpawn.createSimpleWorker(thisSpawn.id, curSpawnEnergy, spawnRoom.name, 'harvester', roomMemory.energySource2, roomMemory.mainStorage,roomMemory.mineralContainer,);
+            return;
+          }
+
+        }
+
+      }
+
+    }else if(totalHarvesters < 1){
+      if(!(curSpawnEnergy < 200)){
+        spawned = thisSpawn.createSimpleWorker(thisSpawn.id, 200, spawnRoom.name, 'harvester', roomMemory.energySource1, roomMemory.mainStorage,roomMemory.mineralContainer,);
+        return;
+      }else{
+        //console.log('All is lost. Pray and love your families.');
+      }
+    }
+
+
+
+      //SPAWNFILLER
+      else if(roomCreeps.filter(c => ((c.memory.role === 'spawnfiller'))).length < thisSpawn.memory.minimumSpawnFillers){
+        if(thisSpawn.memory.minimumSpawnFillers >= 2){
+          if( roomCreeps.filter(c => ((c.memory.role === 'spawnfiller')&& (c.memory.supply == roomMemory.sourceContainer1))).length < 1){
+            if(!(curSpawnEnergy < thisSpawn.memory.FillerEnergy)){
+                spawned = thisSpawn.createFiller(thisSpawn.id, thisSpawn.memory.FillerEnergy, spawnRoom.name, 'spawnfiller', roomMemory.mainStorage, roomMemory.sourceContainer1, undefined,
+                roomMemory.mineralContainer, undefined, roomMemory.sourceContainer1, roomMemory.sourceContainer2, thisSpawn);
+                return;
+              }
+            }
+
+          else if(roomCreeps.filter(c => ((c.memory.role === 'spawnfiller')&& (c.memory.supply == roomMemory.sourceContainer2))).length < 1){
+            if(!(curSpawnEnergy < thisSpawn.memory.FillerEnergy+100)){
+              spawned = thisSpawn.createFiller(thisSpawn.id, (thisSpawn.memory.FillerEnergy)+100, spawnRoom.name, 'spawnfiller', roomMemory.mainStorage, roomMemory.sourceContainer2,undefined,
+              roomMemory.mineralContainer, undefined, roomMemory.sourceContainer1, roomMemory.sourceContainer2);
+              return;
+            }
+          }
+        }else if(thisSpawn.memory.minimumSpawnFillers == 1){
+          if(!(curSpawnEnergy < thisSpawn.memory.FillerEnergy)){
+              spawned = thisSpawn.createFiller(thisSpawn.id, thisSpawn.memory.FillerEnergy, spawnRoom.name, 'spawnfiller', roomMemory.mainStorage, roomMemory.sourceContainer1, roomMemory.sourceContainer2,
+              roomMemory.mineralContainer, undefined, roomMemory.sourceContainer1, roomMemory.sourceContainer2);
+              return;
+            }
+        }
+      }
+
+
+  //UPGRADER
+    else if ((roomCreeps.filter(c => c.memory.role === 'upgrader').length < minimumUpgraders)&&(roomCreeps.filter(c => c.memory.role === 'upgrader').length > 0)){
+
+      if(!(curSpawnEnergy < thisSpawn.memory.UpgraderEnergy)){
+        if(stationaryUpgrade == true){
+          spawned = thisSpawn.createStationaryUpgrader(thisSpawn.id, thisSpawn.memory.UpgraderEnergy, spawnRoom.name, 'upgrader', roomMemory.mainStorage, true);
+          return;
+        }else{
+          spawned = thisSpawn.createSimpleWorker(thisSpawn.id, thisSpawn.memory.UpgraderEnergy, spawnRoom.name, 'upgrader', roomMemory.energySource2, roomMemory.mainStorage,roomMemory.mineralContainer);
+          return;
+        }
+
+      }
+    }else if(roomCreeps.filter(c => c.memory.role === 'upgrader').length < 1){
+      if(!(curSpawnEnergy < 200)){
+        spawned = thisSpawn.createSimpleWorker(thisSpawn.id, 200, spawnRoom.name, 'upgrader', undefined, roomMemory.mainStorage,roomMemory.mineralContainer);
+        return;
+      }
+    }
+
+
+  //MINERALHARVESTER
+  else if((roomCreeps.filter(c => ((c.memory.role === 'harvester')&& (c.memory.sourceBlock == roomMemory.mineralSource))).length  < thisSpawn.memory.minimumMineralHarvesters)&&(theMineralSource.mineralAmount > 0)){
+
+
+    if(!(curSpawnEnergy < thisSpawn.memory.HarvesterEnergy)){
+        spawned = thisSpawn.createStationaryHarvester(thisSpawn.id, thisSpawn.memory.HarvesterEnergy, spawnRoom.name, 'harvester', roomMemory.mineralSource, roomMemory.mainStorage,
+         roomMemory.mineralContainer,true, roomMemory.mineralContainer, true, false, true);
+         return;
+    }
+
+
+
+
+  }
+
+
+
+    //MAINTENANCE
+    else if(roomCreeps.filter(c => c.memory.role === 'maintenance').length <thisSpawn.memory.minimumMaintenance){
+      if(!(curSpawnEnergy < thisSpawn.memory.MaintenanceEnergy)){
+        spawned = thisSpawn.createSimpleWorker(thisSpawn.id, thisSpawn.memory.MaintenanceEnergy, spawnRoom.name, 'maintenance', undefined, roomMemory.mainStorage,roomMemory.mineralContainer,roomMemory.wallStrength);
+        return;
+      }
+
+    }
+
+
+
+
+
+
+  //STORAGEFILLER
+  else if(roomCreeps.filter(c => c.memory.role === 'storagefiller').length < thisSpawn.memory.minimumStorageFillers){
+
+      if(!(curSpawnEnergy < thisSpawn.memory.FillerEnergy)){
+        spawned = thisSpawn.createFiller(thisSpawn.id, thisSpawn.memory.FillerEnergy, spawnRoom.name, 'storagefiller', roomMemory.mainStorage, undefined, undefined,
+        roomMemory.mineralContainer, undefined, roomMemory.sourceContainer1, roomMemory.sourceContainer2);
+        return;
+      }
+
+  }
+
+
+
+  //MARKETFILLER
+  else if((roomCreeps.filter(c => c.memory.role === 'marketfiller').length < thisSpawn.memory.minimumMarketFillers)&&(theMineralSource.mineralAmount > 0)){
+      if(!(curSpawnEnergy < thisSpawn.memory.FillerEnergy)){
+        spawned = thisSpawn.createFiller(thisSpawn.id, thisSpawn.memory.FillerEnergy, spawnRoom.name, 'marketfiller', roomMemory.mainStorage, roomMemory.mineralContainer, undefined,
+        roomMemory.mineralContainer, undefined, roomMemory.sourceContainer1, roomMemory.sourceContainer2,
+        roomMemory.mineralType, roomMemory.roomTerminal);
+        return;
+      }
+
+  }
+
+
+
+
+
+  //BUILDER
+    else if(roomCreeps.filter(c => c.memory.role === 'builder').length< thisSpawn.memory.minimumBuilders && thisSpawn.memory.isBuilding == true){
+        if(!(curSpawnEnergy < thisSpawn.memory.BuilderEnergy)){
+          spawned = thisSpawn.createSimpleWorker(thisSpawn.id, thisSpawn.memory.BuilderEnergy, spawnRoom.name, 'builder', undefined, roomMemory.mainStorage);
+          return;
+        }
+
+
+    }
+  //WALLER
+    else if((roomCreeps.filter(c => c.memory.role === 'waller').length < thisSpawn.memory.minimumWallers) && (((spawnRoom.find(FIND_STRUCTURES, {filter: (structure) =>
+    { return (((structure.structureType == STRUCTURE_WALL))
+    && (structure.hits < roomMemory.wallStrength)) } }))).length > 0)) {
+
+
+      if(totalWallers <thisSpawn.memory.minimumWallers){
+        spawned = thisSpawn.createCreep([WORK,WORK,CARRY,CARRY,MOVE,MOVE],undefined,
+          { roomName: spawnRoom.name,role: "waller", targetStrength: roomMemory.wallStrength, storageBlock: thisSpawn.memory.storaging});
+          return;
+      }
+    }
+
+
+
+
+
+    //HELPING ALLIES
+    else if((roomMemory.isHelpingRoom == true)&&(energyStored > 100000)
+    &&((roomCreeps.filter(c => c.memory.targetRoom === roomMemory.helpingRoom).length < 4))
+
+  ){
+      if((thisSpawn.memory.helperUnit == undefined)||(thisSpawn.memory.helperUnit == 'builder')){
+        spawned = thisSpawn.createHelperWorker(thisSpawn.id, (curSpawnEnergy*.3), spawnRoom.name, 'builder', roomMemory.mainStorage, roomMemory.helpingRoom);
+        return;
+      }
+
+
+    }
+    if(Boolean(spawned) == true){
+    }
+
+  //NOSPAWN
+    else{
+      // if( thisSpawn == Game.spawns.Spawn1){
+      //     console.log("no spawns required");
+      //   }
+      thisSpawn.memory.sleepCounter = (Math.floor(Math.random() * 10) + 1);
+    }
+
+
+
+
+
+
+
+  }
+
+
+
+//console.log((roomCreeps.filter(c => c.memory.targetRoom === roomMemory.helpingRoom).length))
+
+
+
+
+
+//var cpuUsed2 = Game.cpu.getUsed();console.log("CPU Used before " + thisSpawn+": " + cpuUsed2);
+
+
+
+
+
+
+  }
+}
