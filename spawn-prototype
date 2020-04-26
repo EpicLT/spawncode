@@ -1,0 +1,237 @@
+module.exports = function(){
+
+  StructureSpawn.prototype.createSimpleWorker = function(theSpawn, energy, homeRoom, roleName, creepSource,  creepStorage, mineralContainer, wallHits){
+    if(typeof(creepSource)==='undefined') {creepSource = undefined;}
+    if(typeof(wallHits)==='undefined') {wallHits = undefined;}
+      var numberOfParts = Math.floor(energy/200);
+
+      if(numberOfParts == 1){finalBody = [WORK,CARRY,MOVE]}
+      else if(numberOfParts == 2){finalBody = [WORK,WORK,CARRY,CARRY,MOVE,MOVE]}
+      else if(numberOfParts == 3){finalBody = [WORK,WORK,WORK,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE]}
+      else if(numberOfParts == 4){finalBody = [WORK,WORK,WORK,WORK,CARRY,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE,MOVE]}
+      else if(numberOfParts >= 5){finalBody = [WORK,WORK,WORK,WORK,WORK,CARRY,CARRY,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE]}
+
+
+
+      //
+      // var body1 = [];
+      // body1.length = numberOfParts;
+      // body1.fill(WORK);
+      // var body2 = [];
+      // body2.length = numberOfParts;
+      // body2.fill(CARRY);
+      // var body3 = [];
+      // body3.length = numberOfParts;
+      // body3.fill(MOVE);
+      //
+      // var finalBody = body1.concat(body2);
+      // var finalBody = finalBody.concat(body3);
+      //console.log(finalBody);
+
+      // for(let i = 0; i < numberOfParts;i++){body.push(WORK);}
+      // for(let i = 0; i < numberOfParts;i++){body.push(CARRY);}
+      // for(let i = 0; i < numberOfParts;i++){body.push(MOVE);}
+
+      return this.createCreep(finalBody, undefined, {homeRoom : homeRoom, role : roleName, sourceBlock : creepSource, storageBlock : creepStorage, targetStrength : wallHits});
+    };
+
+
+    StructureSpawn.prototype.createStationaryHarvester = function(theSpawn, energy, homeRoom, roleName, creepSource, creepStorage, mineralContainer, setStation, stationToStore,
+       stationary, shortWalk, mineralCreep){
+        if(typeof(shortWalk)==='undefined') {shortWalk = undefined;}
+        if(typeof(mineralCreep)==='undefined') {mineralCreep = undefined;}
+        if(shortWalk != true){
+          var numberOfParts = Math.floor((energy-200)/100);
+        }else{
+          var numberOfParts = Math.floor((energy-100)/100);
+        }
+        //console.log(thisSpawn + ' hi');
+
+
+        var thisSpawn = Game.getObjectById(theSpawn)
+        if(Boolean(thisSpawn.memory.harvesterBody) != true){
+
+
+          var bodyMain = [];
+          bodyMain.length = numberOfParts;
+          bodyMain.fill(WORK);
+
+          // //for(let i = 0; i < numberOfParts;i++){body.push(WORK);}
+          // body.push(CARRY);
+          // body.push(MOVE);
+          if(shortWalk != true){
+            var bodySecondary = [CARRY, MOVE];
+          }else{
+            var bodySecondary = [CARRY, MOVE, MOVE, MOVE];
+          }
+
+          var finalBody = bodyMain.concat(bodySecondary);
+          thisSpawn.memory.harvesterBody = finalBody;
+        }
+        else{
+
+          finalBody = thisSpawn.memory.harvesterBody;
+        }
+        if(mineralCreep == true){
+          minBody = [WORK,WORK,WORK];
+          finalBody = minBody.concat(finalBody);
+        }
+
+        return this.createCreep(finalBody, undefined, {homeRoom : homeRoom, role : roleName, sourceBlock : creepSource, storageBlock : creepStorage, mineralContainer : mineralContainer, hasStation: setStation,
+          stationaryStore: stationToStore, isStationary: stationary, hasMinerals: mineralCreep});
+
+
+
+      };
+
+
+      StructureSpawn.prototype.createStationaryUpgrader = function(theSpawn, energy, homeRoom, roleName, creepStorage, stationary){
+
+        var thisSpawn = Game.getObjectById(theSpawn);
+        if(Boolean(thisSpawn.memory.upgraderBody) != true){
+            var numberOfParts = Math.floor((energy-200)/100);
+            var bodyMain = [];
+            bodyMain.length = numberOfParts;
+            bodyMain.fill(WORK);
+
+            var bodySecondary = [CARRY, CARRY, MOVE, MOVE];
+
+            var finalBody = bodyMain.concat(bodySecondary);
+            thisSpawn.memory.upgraderBody = finalBody;
+        }else{
+          finalBody = thisSpawn.memory.upgraderBody;
+        }
+
+
+          // for(let i = 0; i < numberOfParts;i++){body.push(WORK);}
+          // body.push(CARRY);
+          // body.push(CARRY);
+          // body.push(MOVE);
+          // body.push(MOVE);
+
+          return this.createCreep(finalBody, undefined, {homeRoom : homeRoom, role : roleName,  storageBlock : creepStorage, isStationary: stationary});
+        };
+
+
+        StructureSpawn.prototype.claimNewRoom = function(newRoom){
+            var body = [CLAIM,MOVE,MOVE];
+
+            return this.createCreep(body, undefined, {role : 'claimer', targetRoom : newRoom});
+          };
+
+
+
+
+
+
+      StructureSpawn.prototype.createFiller = function(theSpawn, energy, homeRoom, roleName, creepStorage, creepSupply, creepSupply2, mineralContainer,
+         stationCheck, sourceblock1, sourceblock2, resourceType, terminalBlock){
+        if(typeof(energy)==='undefined') {energy = 200;}
+        if(typeof(roleName)==='undefined') {roleName = 'spawnfiller';}
+        if(typeof(creepStorage)==='undefined') {creepStorage = undefined;}
+        if(typeof(creepSupply)==='undefined') {creepSupply = undefined;}
+        if(typeof(creepSupply2)==='undefined') {creepSupply2 = undefined;}
+        if(typeof(mineralContainer)==='undefined') {mineralContainer = undefined;}
+        if(typeof(stationCheck)==='undefined') {stationCheck = undefined;}
+        if(typeof(sourceblock1)==='undefined') {sourceblock1 = undefined;}
+        if(typeof(sourceblock2)==='undefined') {sourceblock2 = undefined;}
+        if(typeof(resourceType)==='undefined') {resourceType = RESOURCE_ENERGY;}
+        if(typeof(terminalBlock)==='undefined') {terminalBlock = RESOURCE_ENERGY;}
+
+
+//console.log(thisSpawn + ' hi');
+
+
+        var thisSpawn = Game.getObjectById(theSpawn);
+        if(Boolean(thisSpawn.memory.fillerBody) != true){
+
+
+          var numberOfParts = Math.floor(energy/100);
+          var body1 = [];
+          body1.length = numberOfParts;
+          body1.fill(CARRY);
+          var body2 = [];
+          body2.length = numberOfParts;
+          body2.fill(MOVE);
+
+          var finalBody = body1.concat(body2);
+          thisSpawn.memory.fillerBody = finalBody;
+          // console.log('asdfsadfasdfasdfasdfasdfasdfasdfasdfasdfasdfsadfasdfasdfasdfasdfasdfasdfasdfasdfasdfsadfasdfasdfasdfasdfasdfasdfasdfasdf'+
+          // 'asdfsadfasdfasdfasdfasdfasdfasdfasdfasdfasdfsadfasdfasdfasdfasdfasdfasdfasdfasdfasdfsadfasdfasdfasdfasdfasdfasdfasdfasdf'+
+          // 'asdfsadfasdfasdfasdfasdfasdfasdfasdfasdfasdfsadfasdfasdfasdfasdfasdfasdfasdfasdfasdfsadfasdfasdfasdfasdfasdfasdfasdfasdf'+
+          // 'asdfsadfasdfasdfasdfasdfasdfasdfasdfasdfasdfsadfasdfasdfasdfasdfasdfasdfasdfasdfasdfsadfasdfasdfasdfasdfasdfasdfasdfasdf')
+        }else{
+          finalBody = thisSpawn.memory.fillerBody;
+        }
+
+          // for(let i = 0; i < numberOfParts;i++){body.push(CARRY);}
+          // for(let i = 0; i < numberOfParts;i++){body.push(MOVE);}
+
+          return this.createCreep(finalBody, undefined, {homeRoom : homeRoom, role : roleName, storageBlock : creepStorage, supply: creepSupply, supply2: creepSupply2, mineralSupply: mineralContainer,
+            hasStation: stationCheck, sourceContainer1: sourceblock1, sourceContainer2: sourceblock2, resourceType: resourceType, terminalBlock: terminalBlock});
+        };
+
+
+        StructureSpawn.prototype.createSimpleDefender = function(theSpawn, energy, homeRoom, theRoom){
+          if(typeof(theRoom)==='undefined') {theRoom = undefined;}
+            var numberOfParts = Math.floor(energy/200);
+            var body = [];
+
+
+            var body1 = [];
+            body1.length = numberOfParts*2;
+            body1.fill(TOUGH);
+            var body2 = [];
+            body2.length = numberOfParts;
+            body2.fill(ATTACK);
+            var body3 = [];
+            body3.length = numberOfPart*2;
+            body3.fill(MOVE);
+
+            var finalBody = body1.concat(body2);
+            var finalBody = finalBody.concat(body3);
+
+
+
+
+            // for(let i = 0; i < numberOfParts;i++){body.push(TOUGH);body.push(TOUGH);}
+            // for(let i = 0; i < numberOfParts;i++){body.push(ATTACK);}
+            // for(let i = 0; i < numberOfParts;i++){body.push(MOVE);body.push(MOVE);}
+
+            return this.createCreep(finalBody, undefined, {homeRoom : homeRoom, role : 'defender', targetRoom : theRoom});
+          };
+
+
+
+          StructureSpawn.prototype.createHelperWorker = function(theSpawn, energy, homeRoom, theRole, creepStorage, theRoom){
+            if(typeof(energy)==='undefined') {energy = 350;}
+              var numberOfParts = Math.floor(energy/350);
+              var body = [];
+
+
+              var body1 = [];
+              body1.length = numberOfParts;
+              body1.fill(WORK);
+              var body2 = [];
+              body2.length = numberOfParts*2;
+              body2.fill(CARRY);
+              var body3 = [];
+              body3.length = numberOfParts*3;
+              body3.fill(MOVE);
+
+              var finalBody = body1.concat(body2);
+              var finalBody = finalBody.concat(body3);
+
+
+
+              // for(let i = 0; i < numberOfParts;i++){body.push(WORK);}
+              // for(let i = 0; i < numberOfParts;i++){body.push(CARRY);body.push(CARRY);}
+              // for(let i = 0; i < numberOfParts;i++){body.push(MOVE);body.push(MOVE);body.push(MOVE);}
+
+              return this.createCreep(finalBody, undefined, {homeRoom : homeRoom, role : theRole, targetRoom : theRoom, storageBlock : creepStorage});
+            };
+
+
+
+
+  }
